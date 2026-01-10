@@ -50,17 +50,30 @@ const rooms = new Elysia({ prefix: "/room" }).post(  // <- Add () here
     const ttl = await redis.ttl(`meta:${auth.roomId}`)
     return {ttl: ttl > 0 ? ttl : 0}
 },{query:z.object({roomId:z.string()})})
-.delete("/",async ({auth})=>{
-
-    await realtime.channel(auth.roomId).emit("chat.destroy",{isDestroyed:true})
-    await Promise.all([
-     redis.del(auth.roomId),
-     redis.del(`messages:${auth.roomId}`),
-    redis.del(`meta:${auth.roomId}`)
-    ])
+.delete(
+  "/",
+  async ({ auth }) => {
+    console.log('🗑️ DELETE ROOM CALLED:', auth.roomId)
     
-    
-},{query:z.object({roomId:z.string()})})
+    try {
+      await realtime.channel(auth.roomId).emit("chat.destroy", { isDestroyed: true })
+      console.log('✅ Realtime emit successful')
+      
+      await Promise.all([
+        redis.del(`messages:${auth.roomId}`),
+        redis.del(`meta:${auth.roomId}`)
+      ])
+      console.log('✅ Redis cleanup complete')
+      
+      return { success: true }  // ← THIS LINE IS THE FIX!
+      
+    } catch (error) {
+      console.error('❌ DELETE ERROR:', error)
+      return { success: false, error: String(error) }  // ← THIS TOO!
+    }
+  },
+  { query: z.object({ roomId: z.string() }) }
+)
 
 //BEFORE EXECUTING LOGIC WE PASS IT THORW AUTH-MIDDLEWARE
 const messages=new Elysia({prefix:"/messages"}).use(authMiddleWare)//<-this will ALWAYS RUN before the post request so we know job bhi auth middleware se return ho raha hai
@@ -133,6 +146,8 @@ const remaining=await redis.ttl(`meta:${roomId}`)
 await redis.expire(`messages:${roomId}`,remaining)
 await redis.expire(`history:${roomId}`,remaining)
 await redis.expire(roomId,remaining)
+return { success: true, message }  // ← ADD THIS LINE!
+
 },{
 
     query:z.object({roomId:z.string()}),
