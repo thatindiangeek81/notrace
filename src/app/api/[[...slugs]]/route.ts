@@ -13,6 +13,7 @@ import { nanoid } from 'nanoid';
 import { authMiddleWare } from './auth';
 import z from 'zod';
 import { Message, realtime } from '@/lib/realtime';
+import { decrypt, encrypt } from '@/lib/encryption';
 
 
 
@@ -91,7 +92,7 @@ if(!roomExists){
 const message :Message={
     id:nanoid(),
     sender,
-    text,
+    text:encrypt(text),//encrypting message before storing in database
     timestamp:Date.now(),
     roomId,
 
@@ -161,6 +162,7 @@ return { success: true, message }  // ← ADD THIS LINE!
     const messages=await redis.lrange<Message>(`messages:${auth.roomId}`,0,-1)
     return {messages:messages.map((m)=>({
         ...m,
+        text:decrypt(m.text),//decrypting message before sending to client
         token:m.token===auth.token ?auth.token : undefined,//if token hamara toh return karo warna agar dusre memeber ka toh undefined
     }) )}
 },{query:z.object({roomId:z.string()})})//jab bhi get call hoga middleware ko hume roomId dena hoga wahi hai yeh
