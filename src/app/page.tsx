@@ -44,8 +44,10 @@ function Lobby() {
 //mutate->is a function that triggers your mutation(runs your mutationFn)
 //we will add to button of --"create secure room"--
 //mutationFn: = a property name - this tells useMutation "here's the function you should run when I want to mutate data"
-const{mutate:createRoom}=useMutation({
+const{mutate:createRoom,isPending}=useMutation({
+  
   mutationFn :async()=>{
+    
     const res=await client.room.create.post()
   //this is like front end is sending letter to backend(elysia),elysia recieves it,process it,and send a reply back
  //client is auto generated object by elysia,it is like starting point
@@ -172,9 +174,13 @@ return (
               </div>
             </div>
           </div>
-          <button onClick={()=>createRoom()} className="w-full bg-zinc-100 text-black p-3 text-sm font-bold hover:bg-zinc-50 hover:text-black transition-colors mt-2 cursor-pointer disabled:opacity-50">
-            CREATE SECURE ROOM
-          </button>
+         <button
+  onClick={() => createRoom()}
+  disabled={isPending}
+  className="w-full bg-zinc-100 text-black p-3 text-sm font-bold hover:bg-zinc-50 hover:text-black transition-colors mt-2 cursor-pointer disabled:opacity-50"
+>
+  {isPending ? "Creating..." : "CREATE SECURE ROOM"}
+</button>
         </div>
         </div>
       </div>

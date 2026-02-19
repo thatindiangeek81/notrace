@@ -86,7 +86,7 @@ const {data:messages ,refetch}=useQuery({
 })
 //
 
-const {mutate:sendMessage,isPending}=useMutation({
+const {mutate:sendMessage,isPending: isSending}=useMutation({
     mutationFn:async ({text}:{text:string})=>{
         await client.messages.post({sender:username,text},{query:{roomId}})
         setInput("")
@@ -244,8 +244,8 @@ DESTROY NOW!
     sendMessage({text:input})
     inputRef.current?.focus()
     }}
-    disabled={!input.trim() || isPending}
-    className="bg-zinc-800 text-zinc-400 px-4 md:px-6 text-xs md:text-sm font-bold hover:text-zinc-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">SEND</button>
+    disabled={!input.trim() || isSending}
+    className="bg-zinc-800 text-zinc-400 px-4 md:px-6 text-xs md:text-sm font-bold hover:text-zinc-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">{isSending ? "Sending..." : "SEND"}</button>
 </div>
 </div>
 </main>
